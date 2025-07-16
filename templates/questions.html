@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Educational Questions - Image Recognition App</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}">
+    <style>
+        .questions-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        .image-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+        
+        .image-display {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .questions-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .question-generator {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+        }
+        
+        .generate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 100%;
+        }
+        
+        .generate-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .questions-list {
+            margin-top: 20px;
+        }
+        
+        .question-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .question-header {
+            display: flex;
+            justify-content: between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        
+        .question-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+        
+        .question-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 15px;
+        }
+        
+        .question-type {
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .question-options {
+            margin-bottom: 15px;
+        }
+        
+        .option {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .option:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .option.correct {
+            background: #dcfce7;
+            border-color: #16a34a;
+            color: #166534;
+        }
+        
+        .option.selected {
+            background: #dbeafe;
+            border-color: #3b82f6;
+        }
+        
+        .question-answer {
+            background: white;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #059669;
+        }
+        
+        .question-explanation {
+            background: #fffbeb;
+            border: 1px solid #fbbf24;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 14px;
+            color: #92400e;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+        
+        .error {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            border-radius: 6px;
+            padding: 12px;
+            color: #dc2626;
+            margin-bottom: 20px;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .nav-links a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .questions-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Educational Questions</h1>
+        
+        <div class="nav-links">
+            <a href="/">← Back to Upload</a>
+            <a href="/gallery">📷 Gallery</a>
+            <a href="/detailed_view">📊 Detailed View</a>
+        </div>
+        
+        <div class="questions-container">
+            <!-- Image Section -->
+            <div class="image-section">
+                <h2>📸 Flashcard Image</h2>
+                {% if image %}
+                    <img src="{{ image.image_url }}" alt="{{ image.image_name }}" class="image-display">
+                    
+                    <div style="margin-top: 15px;">
+                        <h3>Image Analysis</h3>
+                        <p><strong>Description:</strong> {{ image.description or "Not analyzed yet" }}</p>
+                        {% if image.confidence %}
+                            <p><strong>Confidence:</strong> {{ "%.1f" | format(image.confidence * 100) }}%</p>
+                        {% endif %}
+                        {% if image.tags %}
+                            <p><strong>Category:</strong> {{ image.tags.category or "mixed" }}</p>
+                            {% if image.tags.colors %}
+                                <p><strong>Colors:</strong> {{ ", ".join(image.tags.colors[:5]) }}</p>
+                            {% endif %}
+                            {% if image.tags.shapes %}
+                                <p><strong>Shapes:</strong> {{ ", ".join(image.tags.shapes[:5]) }}</p>
+                            {% endif %}
+                            {% if image.tags.objects %}
+                                <p><strong>Objects:</strong> {{ ", ".join(image.tags.objects[:5]) }}</p>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <p>Image not found</p>
+                {% endif %}
+            </div>
+            
+            <!-- Questions Section -->
+            <div class="questions-section">
+                <h2>🎓 Question Generator</h2>
+                
+                {% if not image.tags %}
+                    <div class="error">
+                        This image hasn't been analyzed yet. Please wait for AI analysis to complete before generating questions.
+                    </div>
+                {% else %}
+                    <div class="question-generator">
+                        <form id="questionForm">
+                            <div class="form-group">
+                                <label for="difficulty">Difficulty Level:</label>
+                                <select id="difficulty" name="difficulty">
+                                    <option value="preschool">Preschool (Ages 3-5)</option>
+                                    <option value="elementary" selected>Elementary (Ages 5-10)</option>
+                                    <option value="middle">Middle School (Ages 10-14)</option>
+                                    <option value="high">High School (Ages 14-18)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="numQuestions">Number of Questions:</label>
+                                <input type="number" id="numQuestions" name="numQuestions" min="1" max="10" value="5">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Question Types (leave unchecked for mixed):</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="identification" name="questionTypes" value="identification">
+                                        <label for="identification">Identification</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="counting" name="questionTypes" value="counting">
+                                        <label for="counting">Counting</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="spatial" name="questionTypes" value="spatial">
+                                        <label for="spatial">Spatial</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="true_false" name="questionTypes" value="true_false">
+                                        <label for="true_false">True/False</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="multiple_choice" name="questionTypes" value="multiple_choice">
+                                        <label for="multiple_choice">Multiple Choice</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="generate-btn" id="generateBtn">
+                                🎲 Generate Questions
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div id="questionsResult">
+                        <!-- Questions will be loaded here -->
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const imageId = '{{ image.id }}';
+        
+        document.getElementById('questionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const generateBtn = document.getElementById('generateBtn');
+            const questionsResult = document.getElementById('questionsResult');
+            
+            // Disable button and show loading
+            generateBtn.disabled = true;
+            generateBtn.textContent = '🔄 Generating Questions...';
+            questionsResult.innerHTML = '<div class="loading">Generating educational questions...</div>';
+            
+            try {
+                // Get form data
+                const formData = new FormData(e.target);
+                const difficulty = formData.get('difficulty');
+                const numQuestions = formData.get('numQuestions');
+                
+                // Get selected question types
+                const selectedTypes = Array.from(formData.getAll('questionTypes'));
+                const questionTypes = selectedTypes.length > 0 ? selectedTypes.join(',') : null;
+                
+                // Build URL
+                let url = `/api/generate-questions/${imageId}?difficulty=${difficulty}&num_questions=${numQuestions}`;
+                if (questionTypes) {
+                    url += `&question_types=${questionTypes}`;
+                }
+                
+                // Make request
+                const response = await fetch(url, { method: 'POST' });
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to generate questions');
+                }
+                
+                // Display questions
+                displayQuestions(data);
+                
+            } catch (error) {
+                questionsResult.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            } finally {
+                // Re-enable button
+                generateBtn.disabled = false;
+                generateBtn.textContent = '🎲 Generate Questions';
+            }
+        });
+        
+        function displayQuestions(questionSet) {
+            const questionsResult = document.getElementById('questionsResult');
+            
+            if (!questionSet.questions || questionSet.questions.length === 0) {
+                questionsResult.innerHTML = '<div class="error">No questions generated. Please try again.</div>';
+                return;
+            }
+            
+            let html = `
+                <div class="questions-list">
+                    <h3>📝 Generated Questions (${questionSet.total_questions})</h3>
+                    <p style="margin-bottom: 20px; color: #6b7280;">
+                        Difficulty: <strong>${questionSet.difficulty_level}</strong> | 
+                        Generated: ${new Date(questionSet.generated_at).toLocaleString()}
+                    </p>
+            `;
+            
+            questionSet.questions.forEach((question, index) => {
+                html += `
+                    <div class="question-card">
+                        <div class="question-header">
+                            <div>
+                                <div class="question-text">${index + 1}. ${question.text}</div>
+                                <div class="question-meta">
+                                    <span class="question-type">${question.type}</span>
+                                    <span>Category: ${question.category}</span>
+                                    <span>Difficulty: ${question.difficulty}</span>
+                                </div>
+                            </div>
+                        </div>
+                `;
+                
+                if (question.options && question.options.length > 0) {
+                    html += '<div class="question-options">';
+                    question.options.forEach((option, optIndex) => {
+                        const isCorrect = option === question.correct_answer;
+                        const optionLetter = String.fromCharCode(65 + optIndex); // A, B, C, D
+                        html += `
+                            <div class="option ${isCorrect ? 'correct' : ''}" onclick="selectOption(this)">
+                                ${optionLetter}) ${option}
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                } else {
+                    html += `
+                        <div class="question-answer">
+                            <strong>Answer:</strong> ${question.correct_answer}
+                        </div>
+                    `;
+                }
+                
+                if (question.explanation) {
+                    html += `
+                        <div class="question-explanation">
+                            <strong>Explanation:</strong> ${question.explanation}
+                        </div>
+                    `;
+                }
+                
+                html += '</div>';
+            });
+            
+            html += '</div>';
+            questionsResult.innerHTML = html;
+        }
+        
+        function selectOption(element) {
+            // Remove selection from siblings
+            const siblings = element.parentNode.querySelectorAll('.option');
+            siblings.forEach(sibling => sibling.classList.remove('selected'));
+            
+            // Add selection to clicked option
+            element.classList.add('selected');
+        }
+    </script>
+</body>
+</html>

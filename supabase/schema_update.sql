@@ -4,9 +4,14 @@ CREATE EXTENSION IF NOT EXISTS vector;
 -- Step 2: Add new columns to the images table
 ALTER TABLE images
   ADD COLUMN description TEXT,
+  ADD COLUMN confidence FLOAT DEFAULT 0.0,
   ADD COLUMN tags JSONB,
   ADD COLUMN raw_json JSONB,
-  ADD COLUMN embedding VECTOR(1536);
+  ADD COLUMN embedding VECTOR(1536),
+  ADD COLUMN prompt_tokens INTEGER DEFAULT 0,
+  ADD COLUMN completion_tokens INTEGER DEFAULT 0,
+  ADD COLUMN total_tokens INTEGER DEFAULT 0,
+  ADD COLUMN analysis_attempts INTEGER DEFAULT 1;
 
 -- Step 3: Create index for semantic search (optional but recommended)
 CREATE INDEX ON images USING ivfflat (embedding vector_l2_ops) WITH (lists = 100);
@@ -22,6 +27,7 @@ RETURNS TABLE (
   image_name TEXT,
   image_url TEXT,
   description TEXT,
+  confidence FLOAT,
   tags JSONB,
   similarity FLOAT
 )
@@ -32,6 +38,7 @@ AS $$
     image_name,
     image_url,
     description,
+    confidence,
     tags,
     1 - (embedding <-> query_embedding) AS similarity
   FROM images

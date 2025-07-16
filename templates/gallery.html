@@ -123,6 +123,168 @@
         .btn:hover {
             background: #5a6fd8;
         }
+        
+        .btn-primary:hover {
+            background: #5a6fd8 !important;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563 !important;
+        }
+        
+        .multi-select-controls {
+            background: #f0f4ff;
+            padding: 15px 30px;
+            border-bottom: 1px solid #c7d2fe;
+            display: none;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .multi-select-controls.active {
+            display: flex;
+        }
+        
+        .selection-info {
+            font-weight: 600;
+            color: #3730a3;
+        }
+        
+        .question-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .question-controls label {
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+        }
+        
+        .question-controls select {
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            background: white;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .question-controls select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn-multi {
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s;
+        }
+        
+        .btn-multi.primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-multi.secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-multi.danger {
+            background: #dc2626;
+            color: white;
+        }
+        
+        .btn-multi:hover {
+            transform: translateY(-1px);
+            opacity: 0.9;
+        }
+        
+        .image-card.selected {
+            border: 3px solid #667eea;
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .image-card.selection-mode {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .image-card.selection-mode:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.15);
+        }
+        
+        .image-card.selection-mode:hover .image-checkbox {
+            border-color: #5a6fd8;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+        
+        .image-checkbox {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            z-index: 10;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 4px;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+        
+        .image-checkbox:checked {
+            background: #667eea;
+            border-color: #667eea;
+        }
+        
+        .image-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .image-checkbox:hover {
+            border-color: #5a6fd8;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .block-label {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        .block-label.show {
+            display: flex;
+        }
 
         .gallery-container {
             padding: 30px;
@@ -332,8 +494,35 @@
             <select class="filter-select" id="moodFilter">
                 <option value="">All Moods</option>
             </select>
+            <button class="btn" id="toggleSelectionMode">📋 Select Multiple</button>
             <a href="/upload" class="btn">📤 Upload New Image</a>
             <a href="/detailed" class="btn">📊 Detailed View</a>
+        </div>
+        
+        <div class="multi-select-controls" id="multiSelectControls">
+            <div class="selection-info">
+                <span id="selectedCount">0</span> images selected
+            </div>
+            <div class="question-controls">
+                <label for="multiQuestionCount">Questions:</label>
+                <select id="multiQuestionCount">
+                    <option value="3">3 Questions</option>
+                    <option value="5" selected>5 Questions</option>
+                    <option value="7">7 Questions</option>
+                    <option value="10">10 Questions</option>
+                </select>
+                <label for="multiDifficulty">Difficulty:</label>
+                <select id="multiDifficulty">
+                    <option value="preschool">Preschool</option>
+                    <option value="elementary" selected>Elementary</option>
+                    <option value="middle">Middle School</option>
+                    <option value="high">High School</option>
+                </select>
+            </div>
+            <button class="btn-multi primary" id="generateMultiQuestions">🧠 Generate Questions</button>
+            <button class="btn-multi secondary" id="selectAll">✅ Select All</button>
+            <button class="btn-multi secondary" id="clearSelection">❌ Clear All</button>
+            <button class="btn-multi danger" id="cancelSelection">Cancel</button>
         </div>
 
         <div class="gallery-container">
@@ -466,11 +655,31 @@
                 const card = createImageCard(image);
                 grid.appendChild(card);
             });
+            
+            // Re-apply selection mode state after rendering
+            if (selectionMode) {
+                const checkboxes = document.querySelectorAll('.image-checkbox');
+                const cards = document.querySelectorAll('.image-card');
+                
+                cards.forEach(card => card.classList.add('selection-mode'));
+                
+                checkboxes.forEach(cb => {
+                    cb.style.display = 'block';
+                    // Restore checked state if this image was previously selected
+                    const imageId = cb.dataset.imageId;
+                    if (selectedImages.has(imageId)) {
+                        cb.checked = true;
+                        const card = document.querySelector(`[data-image-id="${imageId}"]`);
+                        if (card) card.classList.add('selected');
+                    }
+                });
+            }
         }
 
         function createImageCard(image) {
             const card = document.createElement('div');
             card.className = 'image-card';
+            card.dataset.imageId = image.id;
             
             const uploadDate = new Date(image.created_at).toLocaleDateString('en-US', {
                 year: 'numeric',
@@ -484,6 +693,8 @@
             const quality = tags.quality || 'unknown';
             
             card.innerHTML = `
+                <input type="checkbox" class="image-checkbox" style="display: none;" data-image-id="${image.id}">
+                <div class="block-label" data-image-id="${image.id}"></div>
                 <img src="${image.display_url || image.image_url}" alt="${image.image_name}" class="image-preview" 
                      onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBhdmFpbGFibGU8L3RleHQ+PC9zdmc+'">
                 
@@ -625,11 +836,509 @@
                         <span class="upload-date">📅 ${uploadDate}</span>
                         <span class="quality-badge quality-${quality}">${quality}</span>
                     </div>
+                    
+                    <div class="card-actions" style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+                        ${image.tags ? `
+                            <a href="/questions/${image.id}" class="btn btn-primary" style="text-decoration: none; background: #667eea; color: white; padding: 8px 16px; border-radius: 6px; font-size: 14px; display: inline-block; transition: background 0.3s;">
+                                🧠 Generate Questions
+                            </a>
+                        ` : `
+                            <span class="btn btn-disabled" style="background: #e5e7eb; color: #9ca3af; padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: not-allowed;">
+                                🧠 Questions (Analysis Pending)
+                            </span>
+                        `}
+                        <a href="/detailed_view?image_id=${image.id}" class="btn btn-secondary" style="text-decoration: none; background: #6b7280; color: white; padding: 8px 16px; border-radius: 6px; font-size: 14px; display: inline-block; transition: background 0.3s;">
+                            📊 View Details
+                        </a>
+                    </div>
                 </div>
             `;
             
             return card;
         }
+        
+        // Multi-image selection functionality
+        let selectionMode = false;
+        let selectedImages = new Set();
+        
+        function toggleSelectionMode() {
+            selectionMode = !selectionMode;
+            const toggleBtn = document.getElementById('toggleSelectionMode');
+            const multiControls = document.getElementById('multiSelectControls');
+            const checkboxes = document.querySelectorAll('.image-checkbox');
+            const cards = document.querySelectorAll('.image-card');
+            
+            if (selectionMode) {
+                toggleBtn.textContent = '❌ Cancel Selection';
+                toggleBtn.style.background = '#dc2626';
+                multiControls.classList.add('active');
+                checkboxes.forEach(cb => cb.style.display = 'block');
+                cards.forEach(card => card.classList.add('selection-mode'));
+            } else {
+                toggleBtn.textContent = '📋 Select Multiple';
+                toggleBtn.style.background = '#667eea';
+                multiControls.classList.remove('active');
+                checkboxes.forEach(cb => {
+                    cb.style.display = 'none';
+                    cb.checked = false;
+                });
+                cards.forEach(card => {
+                    card.classList.remove('selection-mode');
+                    card.classList.remove('selected');
+                });
+                selectedImages.clear();
+                updateSelectionDisplay();
+            }
+        }
+        
+        function updateSelectionDisplay() {
+            const selectedCount = selectedImages.size;
+            document.getElementById('selectedCount').textContent = selectedCount;
+            const generateBtn = document.getElementById('generateMultiQuestions');
+            const selectAllBtn = document.getElementById('selectAll');
+            const clearBtn = document.getElementById('clearSelection');
+            
+            // Update generate button
+            generateBtn.disabled = selectedCount < 2;
+            if (selectedCount < 2) {
+                generateBtn.textContent = `🧠 Generate Questions (Need ${2 - selectedCount} more)`;
+                generateBtn.style.opacity = '0.5';
+            } else {
+                generateBtn.textContent = `🧠 Generate Questions (${selectedCount})`;
+                generateBtn.style.opacity = '1';
+            }
+            
+            // Update other buttons
+            selectAllBtn.disabled = selectedCount === filteredImages.filter(img => img.tags).length;
+            clearBtn.disabled = selectedCount === 0;
+            
+            // Update select all button text
+            const analyzedCount = filteredImages.filter(img => img.tags).length;
+            if (selectedCount === analyzedCount && analyzedCount > 0) {
+                selectAllBtn.textContent = '✅ All Selected';
+            } else {
+                selectAllBtn.textContent = `✅ Select All (${analyzedCount})`;
+            }
+        }
+        
+        function clearCardSelections() {
+            document.querySelectorAll('.image-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+        }
+        
+        function selectAll() {
+            const visibleImages = filteredImages.filter(img => img.tags); // Only analyzed images
+            selectedImages.clear();
+            
+            visibleImages.forEach(img => {
+                selectedImages.add(img.id);
+                const checkbox = document.querySelector(`input[data-image-id="${img.id}"]`);
+                const card = document.querySelector(`[data-image-id="${img.id}"]`);
+                if (checkbox) checkbox.checked = true;
+                if (card) card.classList.add('selected');
+            });
+            
+            updateSelectionDisplay();
+        }
+        
+        function clearSelection() {
+            selectedImages.clear();
+            document.querySelectorAll('.image-checkbox').forEach(cb => cb.checked = false);
+            clearCardSelections();
+            updateSelectionDisplay();
+        }
+        
+        async function generateMultiImageQuestions() {
+            if (selectedImages.size < 2) {
+                alert('Please select at least 2 images to generate comparative questions.');
+                return;
+            }
+            
+            // Get user-selected values
+            const numQuestions = parseInt(document.getElementById('multiQuestionCount').value);
+            const difficulty = document.getElementById('multiDifficulty').value;
+            
+            const generateBtn = document.getElementById('generateMultiQuestions');
+            const originalText = generateBtn.textContent;
+            
+            // Create and show loading overlay
+            const loadingOverlay = document.createElement('div');
+            loadingOverlay.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.7); z-index: 1000; 
+                display: flex; justify-content: center; align-items: center;
+            `;
+            loadingOverlay.innerHTML = `
+                <div style="background: white; padding: 40px; border-radius: 10px; text-align: center; max-width: 400px;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">🧠</div>
+                    <h3 style="margin-bottom: 10px;">Generating Smart Questions</h3>
+                    <p style="color: #666; margin-bottom: 20px;">Analyzing ${selectedImages.size} images to create ${numQuestions} ${difficulty}-level questions...</p>
+                    <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                    <style>
+                        @keyframes spin {
+                            0% { transform: rotate(0deg); }
+                            100% { transform: rotate(360deg); }
+                        }
+                    </style>
+                </div>
+            `;
+            document.body.appendChild(loadingOverlay);
+            
+            // Update button state
+            generateBtn.textContent = '🔄 Generating...';
+            generateBtn.disabled = true;
+            
+            try {
+                // Create block assignments for selected images
+                const blockAssignments = {};
+                let blockIndex = 0;
+                selectedImages.forEach(imageId => {
+                    const blockLetter = String.fromCharCode(65 + blockIndex); // A, B, C...
+                    blockAssignments[imageId] = blockLetter;
+                    blockIndex++;
+                });
+                
+                const response = await fetch('/api/generate-questions-multi', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        image_ids: Array.from(selectedImages),
+                        block_assignments: blockAssignments,
+                        difficulty: difficulty,
+                        num_questions: numQuestions,
+                        question_types: 'counting,comparison,true_false,block_identification'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to generate questions');
+                }
+                
+                // Remove loading overlay
+                loadingOverlay.remove();
+                
+                // Create a popup or new page to display questions
+                displayMultiImageQuestions(data);
+                
+            } catch (error) {
+                // Remove loading overlay
+                loadingOverlay.remove();
+                alert(`Error generating questions: ${error.message}`);
+            } finally {
+                generateBtn.textContent = originalText;
+                generateBtn.disabled = selectedImages.size < 2;
+            }
+        }
+        
+        function displayMultiImageQuestions(questionSet) {
+            // Get the currently selected images and their block assignments
+            const selectedImageData = {};
+            selectedImages.forEach(imageId => {
+                const card = document.querySelector(`[data-image-id="${imageId}"]`);
+                const blockLabel = card.querySelector('.block-label');
+                const imgElement = card.querySelector('.image-preview');
+                const titleElement = card.querySelector('.image-title');
+                
+                selectedImageData[imageId] = {
+                    block: blockLabel.textContent,
+                    imageUrl: imgElement.src,
+                    title: titleElement.textContent
+                };
+            });
+            
+            // Try popup first, fall back to modal if popup is blocked
+            try {
+                const popup = window.open('', '_blank', 'width=900,height=700,scrollbars=yes');
+                
+                // Check if popup was blocked
+                if (!popup || popup.closed || typeof popup.closed == 'undefined') {
+                    throw new Error('Popup blocked');
+                }
+                
+                const htmlContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Multi-Image Questions</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; background: #f8f9fa; }
+                        .header { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+                        .block-grid { 
+                            display: grid; 
+                            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+                            gap: 15px; 
+                            margin: 20px 0; 
+                            background: white; 
+                            padding: 20px; 
+                            border-radius: 10px;
+                        }
+                        .block-item { 
+                            text-align: center; 
+                            border: 2px solid #667eea; 
+                            border-radius: 10px; 
+                            padding: 10px; 
+                            background: #f8f9ff;
+                        }
+                        .block-letter { 
+                            font-size: 24px; 
+                            font-weight: bold; 
+                            color: #667eea; 
+                            margin-bottom: 10px;
+                        }
+                        .block-image { 
+                            width: 100%; 
+                            height: 100px; 
+                            object-fit: cover; 
+                            border-radius: 5px; 
+                            margin-bottom: 5px;
+                        }
+                        .block-title { 
+                            font-size: 12px; 
+                            color: #666; 
+                            margin-top: 5px;
+                        }
+                        .question { background: white; padding: 15px; margin: 15px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                        .question-text { font-weight: bold; margin-bottom: 10px; font-size: 16px; }
+                        .options { margin: 10px 0; }
+                        .option { padding: 5px; margin: 5px 0; background: #f8f9fa; border-radius: 4px; }
+                        .answer { background: #e8f5e8; padding: 10px; border-radius: 5px; margin-top: 10px; }
+                        .explanation { font-style: italic; color: #666; margin-top: 5px; }
+                        .block-reference { background: #667eea; color: white; padding: 2px 6px; border-radius: 3px; font-weight: bold; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>🧠 Multi-Image Questions with Block System</h1>
+                        <p><strong>Generated from ${questionSet.source_images_count} images</strong></p>
+                        <p>Difficulty: ${questionSet.difficulty_level} | Total Questions: ${questionSet.total_questions}</p>
+                    </div>
+                    
+                    <div class="block-grid">
+                        ${Object.entries(selectedImageData).map(([imageId, data]) => `
+                            <div class="block-item">
+                                <div class="block-letter">Block ${data.block}</div>
+                                <img src="${data.imageUrl}" alt="${data.title}" class="block-image">
+                                <div class="block-title">${data.title}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    ${questionSet.questions.map((q, i) => `
+                        <div class="question">
+                            <div class="question-text">${i + 1}. ${q.text}</div>
+                            <div style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                                Type: ${q.type} | Category: ${q.category}
+                            </div>
+                            ${q.options ? `
+                                <div class="options">
+                                    ${q.options.map((option, idx) => `
+                                        <div class="option">${String.fromCharCode(65 + idx)}) ${option}</div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                            <div class="answer">
+                                <strong>Answer:</strong> ${q.correct_answer}
+                            </div>
+                            ${q.explanation ? `
+                                <div class="explanation">
+                                    ${q.explanation}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `).join('')}
+                    
+                    <div style="margin-top: 30px; text-align: center;">
+                        <button onclick="window.close()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            Close Window
+                        </button>
+                    </div>
+                </body>
+                </html>`;
+                
+                popup.document.open();
+                popup.document.write(htmlContent);
+                popup.document.close();
+                popup.focus();
+                
+            } catch (error) {
+                // Fallback to modal if popup fails
+                console.log('Popup failed, using modal fallback:', error);
+                displayQuestionsModal(questionSet);
+            }
+        }
+        
+        function displayQuestionsModal(questionSet) {
+            // Get the currently selected images and their block assignments
+            const selectedImageData = {};
+            selectedImages.forEach(imageId => {
+                const card = document.querySelector(`[data-image-id="${imageId}"]`);
+                const blockLabel = card.querySelector('.block-label');
+                const imgElement = card.querySelector('.image-preview');
+                const titleElement = card.querySelector('.image-title');
+                
+                selectedImageData[imageId] = {
+                    block: blockLabel.textContent,
+                    imageUrl: imgElement.src,
+                    title: titleElement.textContent
+                };
+            });
+            
+            // Create a modal overlay
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.7); z-index: 1000; 
+                display: flex; justify-content: center; align-items: center;
+            `;
+            
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `
+                background: white; padding: 20px; border-radius: 10px; 
+                max-width: 900px; max-height: 90%; overflow-y: auto;
+                position: relative;
+            `;
+            
+            modalContent.innerHTML = `
+                <div style="position: sticky; top: 0; background: white; padding-bottom: 10px; border-bottom: 1px solid #ddd; margin-bottom: 20px;">
+                    <h2>🧠 Multi-Image Questions with Block System</h2>
+                    <p><strong>Generated from ${questionSet.source_images_count} images</strong></p>
+                    <p>Difficulty: ${questionSet.difficulty_level} | Total Questions: ${questionSet.total_questions}</p>
+                    <button onclick="this.closest('.modal-overlay').remove()" style="position: absolute; top: 10px; right: 10px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer;">×</button>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; background: #f8f9ff; padding: 20px; border-radius: 10px; border: 2px solid #667eea;">
+                    <h3 style="grid-column: 1 / -1; margin: 0 0 15px 0; text-align: center; color: #667eea;">Image Blocks</h3>
+                    ${Object.entries(selectedImageData).map(([imageId, data]) => `
+                        <div style="text-align: center; border: 2px solid #667eea; border-radius: 10px; padding: 10px; background: white;">
+                            <div style="font-size: 18px; font-weight: bold; color: #667eea; margin-bottom: 10px;">Block ${data.block}</div>
+                            <img src="${data.imageUrl}" alt="${data.title}" style="width: 100%; height: 80px; object-fit: cover; border-radius: 5px; margin-bottom: 5px;">
+                            <div style="font-size: 11px; color: #666;">${data.title}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                ${questionSet.questions.map((q, i) => `
+                    <div style="background: #f9f9f9; padding: 15px; margin: 15px 0; border-radius: 8px;">
+                        <div style="font-weight: bold; margin-bottom: 10px;">${i + 1}. ${q.text}</div>
+                        <div style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                            Type: ${q.type} | Category: ${q.category}
+                        </div>
+                        ${q.options ? `
+                            <div style="margin: 10px 0;">
+                                ${q.options.map((option, idx) => `
+                                    <div style="padding: 5px; margin: 5px 0;">${String.fromCharCode(65 + idx)}) ${option}</div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                        <div style="background: #e8f5e8; padding: 10px; border-radius: 5px; margin-top: 10px;">
+                            <strong>Answer:</strong> ${q.correct_answer}
+                        </div>
+                        ${q.explanation ? `
+                            <div style="font-style: italic; color: #666; margin-top: 5px;">
+                                ${q.explanation}
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('')}
+            `;
+            
+            modal.className = 'modal-overlay';
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+            
+            // Close modal when clicking outside
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('toggleSelectionMode').addEventListener('click', toggleSelectionMode);
+            document.getElementById('generateMultiQuestions').addEventListener('click', generateMultiImageQuestions);
+            document.getElementById('selectAll').addEventListener('click', selectAll);
+            document.getElementById('clearSelection').addEventListener('click', clearSelection);
+            document.getElementById('cancelSelection').addEventListener('click', toggleSelectionMode);
+            
+            // Handle checkbox changes
+            document.addEventListener('change', function(e) {
+                if (e.target.classList.contains('image-checkbox')) {
+                    const imageId = e.target.dataset.imageId;
+                    const card = document.querySelector(`[data-image-id="${imageId}"]`);
+                    const blockLabel = card.querySelector('.block-label');
+                    
+                    if (e.target.checked) {
+                        selectedImages.add(imageId);
+                        card.classList.add('selected');
+                        
+                        // Assign block letter (A, B, C, etc.)
+                        const blockIndex = selectedImages.size - 1;
+                        const blockLetter = String.fromCharCode(65 + blockIndex); // A, B, C...
+                        blockLabel.textContent = blockLetter;
+                        blockLabel.classList.add('show');
+                    } else {
+                        selectedImages.delete(imageId);
+                        card.classList.remove('selected');
+                        blockLabel.classList.remove('show');
+                        
+                        // Reassign block letters to remaining selected images
+                        reassignBlockLabels();
+                    }
+                    
+                    updateSelectionDisplay();
+                }
+            });
+            
+            function reassignBlockLabels() {
+                // Clear all block labels first
+                document.querySelectorAll('.block-label').forEach(label => {
+                    label.classList.remove('show');
+                    label.textContent = '';
+                });
+                
+                // Reassign letters to selected images in order
+                let blockIndex = 0;
+                selectedImages.forEach(imageId => {
+                    const card = document.querySelector(`[data-image-id="${imageId}"]`);
+                    const blockLabel = card.querySelector('.block-label');
+                    const blockLetter = String.fromCharCode(65 + blockIndex); // A, B, C...
+                    
+                    blockLabel.textContent = blockLetter;
+                    blockLabel.classList.add('show');
+                    blockIndex++;
+                });
+            }
+            
+            // Handle card clicks in selection mode
+            document.addEventListener('click', function(e) {
+                if (selectionMode && e.target.closest('.image-card')) {
+                    const card = e.target.closest('.image-card');
+                    const checkbox = card.querySelector('.image-checkbox');
+                    
+                    // Don't trigger if clicking on checkbox directly, action buttons, or links
+                    if (!e.target.closest('.image-checkbox') && 
+                        !e.target.closest('.card-actions') && 
+                        !e.target.closest('a') &&
+                        !e.target.closest('button')) {
+                        
+                        e.preventDefault();
+                        checkbox.checked = !checkbox.checked;
+                        
+                        // Manually trigger the change event
+                        const changeEvent = new Event('change', { bubbles: true });
+                        checkbox.dispatchEvent(changeEvent);
+                    }
+                }
+            });
+        });
     </script>
 </body>
 </html>

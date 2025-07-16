@@ -103,7 +103,7 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 12px;
-            min-width: 2000px;
+            min-width: 2800px;
         }
 
         .data-table th {
@@ -164,6 +164,7 @@
         .tag-item.mood { background: #fce4ec; color: #c2185b; }
         .tag-item.setting { background: #fff3e0; color: #f57c00; }
         .tag-item.style { background: #f3e5f5; color: #7b1fa2; }
+        .tag-item.attempts { background: #e1f5fe; color: #0277bd; font-weight: 600; }
 
         .cell-content {
             max-height: 60px;
@@ -268,19 +269,28 @@
                         <th>Image</th>
                         <th>Name</th>
                         <th>Description</th>
+                        <th>Confidence</th>
                         <th>Category</th>
                         <th>Background</th>
+                        <th>Colors</th>
                         <th>Shapes</th>
                         <th>Shape Colors</th>
-                        <th>Text Content</th>
-                        <th>Text Color</th>
-                        <th>Color Mismatches</th>
+                        <th>Letters</th>
+                        <th>Numbers</th>
+                        <th>Words</th>
                         <th>Objects</th>
                         <th>People</th>
                         <th>Animals</th>
-                        <th>Nested Elements</th>
-                        <th>Highlighted Items</th>
-                        <th>Total Count</th>
+                        <th>Shape Contents</th>
+                        <th>Text Location</th>
+                        <th>Color Mismatches</th>
+                        <th>Highlighted</th>
+                        <th>Relationships</th>
+                        <th>Total Items</th>
+                        <th>Counts</th>
+                        <th>Difficulty</th>
+                        <th>Tokens</th>
+                        <th>Attempts</th>
                         <th>Upload Date</th>
                     </tr>
                 </thead>
@@ -374,19 +384,28 @@
                 <td><img src="${image.display_url || image.image_url}" alt="${image.image_name}" class="image-thumb" onerror="this.style.display='none'"></td>
                 <td class="metadata-text">${image.image_name || '-'}</td>
                 <td class="description-cell"><div class="cell-content">${image.description || '-'}</div></td>
-                <td><span class="tag-item category">${tags.educationalContext?.category || tags.category || '-'}</span></td>
-                <td><span class="tag-item setting">${tags.backgroundInfo?.backgroundColor || '-'}</span></td>
-                <td class="tag-cell"><div class="cell-content">${formatArray(tags.shapes?.geometricShapes || tags.shapes)}</div></td>
-                <td class="tag-cell"><div class="cell-content">${formatArray(tags.shapes?.shapeColors || tags.shapeColors, 'mood')}</div></td>
-                <td class="tag-cell"><div class="cell-content">${formatTextContent(tags.textContent)}</div></td>
-                <td><span class="tag-item primary">${tags.textContent?.textColor || '-'}</span></td>
-                <td class="tag-cell"><div class="cell-content">${tags.textContent?.textVsSemanticMismatch || tags.colorAnalysis?.colorWordMismatches ? formatArray([tags.textContent?.textVsSemanticMismatch] || tags.colorAnalysis?.colorWordMismatches, 'style') : '-'}</div></td>
-                <td class="tag-cell"><div class="cell-content">${formatArray(tags.objects?.realWorldItems || tags.objects)}</div></td>
+                <td><span class="quality-badge ${getConfidenceClass(image.confidence)}">${formatConfidence(image.confidence)}</span></td>
+                <td><span class="tag-item category">${tags.category || '-'}</span></td>
+                <td><span class="tag-item setting">${tags.backgroundColor || '-'}</span></td>
+                <td class="tag-cell"><div class="cell-content">${formatArray(tags.colors)}</div></td>
+                <td class="tag-cell"><div class="cell-content">${formatArray(tags.shapes)}</div></td>
+                <td class="tag-cell"><div class="cell-content">${formatArray(tags.shapeColors, 'mood')}</div></td>
+                <td class="tag-cell"><div class="cell-content">${formatArray(tags.letters, 'primary')}</div></td>
+                <td class="tag-cell"><div class="cell-content">${formatArray(tags.numbers, 'primary')}</div></td>
+                <td class="tag-cell"><div class="cell-content">${formatArray(tags.words)}</div></td>
+                <td class="tag-cell"><div class="cell-content">${formatArray(tags.objects)}</div></td>
                 <td class="tag-cell"><div class="cell-content">${formatArray(tags.people)}</div></td>
                 <td class="tag-cell"><div class="cell-content">${formatArray(tags.animals)}</div></td>
-                <td class="tag-cell"><div class="cell-content">${formatArray(tags.shapes?.nestedElements || tags.nestedShapes || tags.spatialRelationships?.itemsInsideShapes, 'style')}</div></td>
-                <td class="tag-cell"><div class="cell-content">${formatArray(tags.colorAnalysis?.highlightedElements, 'primary')}</div></td>
-                <td><span class="tag-item">${tags.quantitativeData?.totalItems || tags.count || '-'}</span></td>
+                <td class="tag-cell"><div class="cell-content">${formatArray(tags.shapeContents, 'style')}</div></td>
+                <td><span class="tag-item">${tags.textLocation || '-'}</span></td>
+                <td class="tag-cell"><div class="cell-content">${formatArray(tags.colorWordMismatches, 'style')}</div></td>
+                <td class="tag-cell"><div class="cell-content">${formatArray(tags.highlightedElements, 'primary')}</div></td>
+                <td class="tag-cell"><div class="cell-content">${formatRelationships(tags)}</div></td>
+                <td><span class="tag-item">${tags.totalItems || '-'}</span></td>
+                <td class="tag-cell"><div class="cell-content">${formatCounts(tags)}</div></td>
+                <td><span class="tag-item category">${tags.difficulty || '-'}</span></td>
+                <td class="metadata-text">${formatTokenUsage(image)}</td>
+                <td><span class="tag-item attempts">${image.analysis_attempts || 1}</span></td>
                 <td class="metadata-text">${uploadDate}</td>
             `;
             
@@ -396,6 +415,29 @@
         function formatArray(arr, tagClass = '') {
             if (!arr || !Array.isArray(arr) || arr.length === 0) return '-';
             return arr.map(item => `<span class="tag-item ${tagClass}">${item}</span>`).join(' ');
+        }
+
+        function formatRelationships(tags) {
+            const relationships = [];
+            if (tags.itemsInsideShapes && Array.isArray(tags.itemsInsideShapes)) {
+                relationships.push(...tags.itemsInsideShapes.map(r => `<span class="tag-item style">Inside: ${r}</span>`));
+            }
+            if (tags.overlappingItems && Array.isArray(tags.overlappingItems)) {
+                relationships.push(...tags.overlappingItems.map(r => `<span class="tag-item mood">Overlap: ${r}</span>`));
+            }
+            if (tags.relativePositions && Array.isArray(tags.relativePositions)) {
+                relationships.push(...tags.relativePositions.map(r => `<span class="tag-item">Position: ${r}</span>`));
+            }
+            return relationships.length > 0 ? relationships.join(' ') : '-';
+        }
+
+        function formatCounts(tags) {
+            const counts = [];
+            if (tags.letterCount) counts.push(`<span class="tag-item primary">L: ${tags.letterCount}</span>`);
+            if (tags.numberCount) counts.push(`<span class="tag-item primary">N: ${tags.numberCount}</span>`);
+            if (tags.objectCount) counts.push(`<span class="tag-item">O: ${tags.objectCount}</span>`);
+            if (tags.shapeCount) counts.push(`<span class="tag-item">S: ${tags.shapeCount}</span>`);
+            return counts.length > 0 ? counts.join(' ') : '-';
         }
 
         function formatTextContent(textContent) {
@@ -411,6 +453,33 @@
                 items.push(...textContent.words.map(w => `<span class="tag-item">Word: ${w}</span>`));
             }
             return items.length > 0 ? items.join(' ') : '-';
+        }
+
+        function formatConfidence(confidence) {
+            if (confidence === null || confidence === undefined) return 'N/A';
+            return `${Math.round(confidence * 100)}%`;
+        }
+
+        function getConfidenceClass(confidence) {
+            if (confidence === null || confidence === undefined) return 'quality-unknown';
+            if (confidence >= 0.8) return 'quality-high';
+            if (confidence >= 0.6) return 'quality-medium';
+            return 'quality-low';
+        }
+
+        function formatTokenUsage(image) {
+            const prompt = image.prompt_tokens || 0;
+            const completion = image.completion_tokens || 0;
+            const total = image.total_tokens || 0;
+            
+            if (total === 0) return 'N/A';
+            
+            return `
+                <div style="font-size: 10px; line-height: 1.2;">
+                    <div><strong>Total:</strong> ${total}</div>
+                    <div>In: ${prompt} | Out: ${completion}</div>
+                </div>
+            `;
         }
     </script>
 </body>
