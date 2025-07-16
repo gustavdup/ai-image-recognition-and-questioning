@@ -280,10 +280,18 @@
             font-size: 16px;
             z-index: 10;
             box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+            border: 2px solid white;
         }
 
         .block-label.show {
             display: flex;
+            animation: blockPulse 0.3s ease-in-out;
+        }
+
+        @keyframes blockPulse {
+            0% { transform: scale(0.8); opacity: 0.7; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         .gallery-container {
@@ -502,6 +510,7 @@
         <div class="multi-select-controls" id="multiSelectControls">
             <div class="selection-info">
                 <span id="selectedCount">0</span> images selected
+                <span id="blockAssignments" style="margin-left: 15px; font-size: 14px; color: #374151;"></span>
             </div>
             <div class="question-controls">
                 <label for="multiQuestionCount">Questions:</label>
@@ -520,6 +529,7 @@
                 </select>
             </div>
             <button class="btn-multi primary" id="generateMultiQuestions">🧠 Generate Questions</button>
+            <button class="btn-multi secondary" id="clearBlocks">🗑️ Clear Blocks</button>
             <button class="btn-multi secondary" id="selectAll">✅ Select All</button>
             <button class="btn-multi secondary" id="clearSelection">❌ Clear All</button>
             <button class="btn-multi danger" id="cancelSelection">Cancel</button>
@@ -886,9 +896,33 @@
                     card.classList.remove('selection-mode');
                     card.classList.remove('selected');
                 });
-                selectedImages.clear();
+                
+                // Keep block labels visible if there are selected images
+                if (selectedImages.size > 0) {
+                    // Don't clear selections, just hide the UI
+                    // Block labels will remain visible
+                } else {
+                    selectedImages.clear();
+                    // Clear all block labels if no images are selected
+                    document.querySelectorAll('.block-label').forEach(label => {
+                        label.classList.remove('show');
+                        label.textContent = '';
+                    });
+                }
                 updateSelectionDisplay();
             }
+        }
+        function clearBlockAssignments() {
+            selectedImages.clear();
+            document.querySelectorAll('.block-label').forEach(label => {
+                label.classList.remove('show');
+                label.textContent = '';
+            });
+            document.querySelectorAll('.image-checkbox').forEach(cb => cb.checked = false);
+            document.querySelectorAll('.image-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            updateSelectionDisplay();
         }
         
         function updateSelectionDisplay() {
@@ -897,6 +931,21 @@
             const generateBtn = document.getElementById('generateMultiQuestions');
             const selectAllBtn = document.getElementById('selectAll');
             const clearBtn = document.getElementById('clearSelection');
+            const blockAssignments = document.getElementById('blockAssignments');
+            
+            // Update block assignments display
+            if (selectedCount > 0) {
+                const blocks = [];
+                let blockIndex = 0;
+                selectedImages.forEach(imageId => {
+                    const blockLetter = String.fromCharCode(65 + blockIndex);
+                    blocks.push(`<span style="background: #667eea; color: white; padding: 2px 6px; border-radius: 3px; margin: 0 2px; font-weight: bold;">${blockLetter}</span>`);
+                    blockIndex++;
+                });
+                blockAssignments.innerHTML = `📋 Blocks: ${blocks.join(' ')}`;
+            } else {
+                blockAssignments.innerHTML = '';
+            }
             
             // Update generate button
             generateBtn.disabled = selectedCount < 2;
@@ -1264,6 +1313,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('toggleSelectionMode').addEventListener('click', toggleSelectionMode);
             document.getElementById('generateMultiQuestions').addEventListener('click', generateMultiImageQuestions);
+            document.getElementById('clearBlocks').addEventListener('click', clearBlockAssignments);
             document.getElementById('selectAll').addEventListener('click', selectAll);
             document.getElementById('clearSelection').addEventListener('click', clearSelection);
             document.getElementById('cancelSelection').addEventListener('click', toggleSelectionMode);
