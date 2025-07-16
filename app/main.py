@@ -30,6 +30,10 @@ def upload_form(request: Request):
 def gallery_page(request: Request):
     return templates.TemplateResponse("gallery.html", {"request": request})
 
+@app.get("/detailed", response_class=HTMLResponse)
+def detailed_view(request: Request):
+    return templates.TemplateResponse("detailed_view.html", {"request": request})
+
 @app.post("/upload")
 async def upload_image(file: UploadFile = File(...)):
     if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:

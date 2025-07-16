@@ -38,84 +38,87 @@
     async function analyzeImageWithGPT(imageUrl: string, openaiApiKey: string) {
       Logger.info("🔍 Starting OpenAI Vision analysis", { imageUrl });
       
-      const prompt = `Analyze this image comprehensively and return a JSON object with the following structure:
+      const prompt = `Analyze this educational flashcard quadrant image with precision for automatic question generation. Return a JSON object:
+
     {
-      "description": "A detailed, vivid description of what's visible in the image",
+      "description": "Brief description of what's in the image",
       "tags": {
-        "colors": ["list", "of", "specific", "colors"],
-        "shapes": ["geometric", "organic", "architectural"],
-        "geometricShapes": {
-          "primary": ["circles", "triangles", "squares", "rectangles", "stars", "polygons"],
-          "nested": ["shapes within shapes, like circles inside triangles"],
-          "patterns": ["repetitive geometric patterns", "tessellations", "fractals"],
-          "arrangements": ["symmetrical", "scattered", "overlapping", "concentric"],
-          "complexity": "simple|moderate|complex|highly-complex",
-          "textInShapes": ["numbers", "letters", "words", "symbols within shapes"],
-          "numbersInShapes": ["specific numbers visible inside shapes"],
-          "lettersInShapes": ["specific letters or characters inside shapes"],
-          "shapeColors": {
-            "circles": ["color of each circle"],
-            "triangles": ["color of each triangle"],
-            "squares": ["color of each square/rectangle"],
-            "stars": ["color of each star"],
-            "polygons": ["color of each polygon"]
-          },
-          "textColors": {
-            "fontColor": ["actual color of the text/letters/numbers themselves"],
-            "textBackground": ["background color behind the text, if different from shape"],
-            "numbersFont": ["font color of numbers inside shapes"],
-            "lettersFont": ["font color of letters inside shapes"],
-            "textContrast": ["description of text visibility, e.g., 'red text on blue background'"]
-          }
+        "backgroundInfo": {
+          "backgroundColor": "specific background color",
+          "hasColoredBackground": true/false
         },
-        "objects": ["specific", "object", "names"],
-        "people": ["person", "descriptions", "if", "any"],
-        "animals": ["animal", "types", "if", "any"],
-        "contentType": "photo|illustration|diagram|screenshot|document|artwork|other",
-        "category": "nature|people|objects|food|architecture|vehicle|technology|art|text|geometry|craft|other",
-        "mood": "happy|sad|energetic|calm|dramatic|professional|casual|playful|educational|other",
-        "setting": "indoor|outdoor|studio|natural|urban|rural|workspace|educational|other",
-        "lighting": "bright|dim|natural|artificial|dramatic|soft|harsh",
-        "style": "realistic|artistic|minimalist|vintage|modern|abstract|handmade|digital|other",
-        "text": "any visible text content, or null if none",
-        "textLanguage": "language of text if detected, or null",
-        "quality": "high|medium|low",
-        "orientation": "landscape|portrait|square",
-        "mainSubjects": ["primary", "focus", "elements"],
-        "background": "description of background elements",
-        "countEstimate": "approximate count of main subjects/objects",
-        "materialDetails": {
-          "materials": ["paper", "fabric", "wood", "metal", "plastic", "digital"],
-          "texture": "smooth|rough|glossy|matte|textured|mixed",
-          "craftType": "handmade|printed|cut|drawn|molded|digital|other"
+        "shapes": {
+          "geometricShapes": ["circle", "triangle", "square", "rectangle", "star", "heart", "diamond", "oval", "pentagon", "hexagon"],
+          "shapeColors": ["red circle", "blue triangle", "yellow square"],
+          "shapeContents": ["letter F inside red square", "number 5 inside yellow star"],
+          "nestedElements": ["black circle inside orange star", "white text inside blue shape"]
         },
-        "technicalDetails": {
-          "apparentCamera": "smartphone|dslr|professional|unknown",
-          "composition": "rule-of-thirds|centered|dynamic|symmetrical|other",
-          "depth": "shallow|deep|medium"
+        "textContent": {
+          "letters": ["A", "B", "C", "etc"],
+          "numbers": ["0", "1", "2", "3", "etc"], 
+          "words": ["red", "blue", "green"],
+          "textColor": "actual display color of text",
+          "textVsSemanticMismatch": "word 'red' displayed in blue color",
+          "textLocation": "inside shape, on background, overlay"
+        },
+        "objects": {
+          "realWorldItems": ["umbrella", "bicycle", "tree", "violin", "igloo", "key", "house", "nest"],
+          "objectColors": ["red umbrella", "blue bicycle"],
+          "objectCount": "number of distinct objects",
+          "objectPositions": ["top", "bottom", "left", "right", "center", "overlapping"]
+        },
+        "people": ["boy", "girl", "man", "woman", "child"],
+        "animals": ["cat", "dog", "bird", "fish", "horse"],
+        "spatialRelationships": {
+          "itemsInsideShapes": ["letter F inside red square", "number 17 inside yellow circle"],
+          "overlappingItems": ["umbrella overlapping with tree"],
+          "relativePositions": ["bicycle left of tree", "key above house"]
+        },
+        "colorAnalysis": {
+          "distinctColors": ["red", "blue", "green", "yellow", "orange", "purple", "pink", "black", "white", "brown", "gray"],
+          "colorWordMismatches": ["word 'green' written in red", "word 'blue' written in yellow"],
+          "highlightedElements": ["yellow square overlay", "colored border around item"]
+        },
+        "quantitativeData": {
+          "totalItems": "exact count of all distinct visual elements",
+          "letterCount": "number of letters present",
+          "numberCount": "number of numerical digits",
+          "objectCount": "number of real-world objects",
+          "shapeCount": "number of geometric shapes"
+        },
+        "educationalContext": {
+          "category": "letters|numbers|shapes|colors|objects|mixed|color-word-mismatch",
+          "difficulty": "basic|intermediate|advanced",
+          "questionTypes": ["identification", "counting", "color", "position", "relationship", "true-false"]
         }
       }
     }
 
-    Pay special attention to:
-    1. GEOMETRIC SHAPES: Identify all basic shapes (circles, triangles, squares, rectangles, stars, etc.)
-    2. SHAPE COLORS: For each shape type, specify the exact color of each individual shape
-    3. NESTED PATTERNS: Look for shapes inside other shapes (like circles within triangles, stars within circles)
-    4. LAYERING: Identify overlapping or stacked geometric elements
-    5. PATTERNS: Notice repetitive designs, tessellations, or geometric arrangements
-    6. TEXT WITHIN SHAPES: Carefully identify any numbers, letters, words, or symbols that appear INSIDE geometric shapes
-    7. NUMBERS IN SHAPES: Specifically note any numerical digits (0-9) that are contained within shapes
-    8. LETTERS IN SHAPES: Look for alphabetic characters or text positioned inside geometric elements
-    9. FONT vs BACKGROUND COLORS: Distinguish between the actual font/text color and any background color behind the text
-    10. TEXT COLOR DETAILS: Specify both the font color AND background color if they differ (e.g., "red font on blue background")
-    11. COLOR MAPPING: Be specific about which elements have which colors (e.g., "yellow square", "black text", "orange star")
-    12. CONTRAST DESCRIPTION: Describe text visibility and color combinations
-    13. CRAFT ELEMENTS: If this appears to be handmade, note the materials and construction method
-    14. SPATIAL RELATIONSHIPS: How shapes relate to each other in terms of position and scale
+    CRITICAL ANALYSIS REQUIREMENTS:
+    1. **TEXT vs VISUAL DISCREPANCY**: Detect when color words don't match their display color (e.g., "red" written in blue)
+    2. **NESTED CONTENT**: Identify what's inside geometric shapes (letters, numbers, objects)
+    3. **SPATIAL RELATIONSHIPS**: Map relative positions and overlapping elements
+    4. **BACKGROUND CONTEXT**: Distinguish between background colors and shape colors
+    5. **HIGHLIGHTED ELEMENTS**: Detect yellow overlays, borders, or emphasis markers
+    6. **COUNTING PRECISION**: Count all distinct visual elements accurately
+    7. **COLOR SPECIFICITY**: Name exact colors, not generic terms
+    8. **OBJECT CLASSIFICATION**: Identify specific real-world items (violin, not just "instrument")
+    9. **TEXT EXTRACTION**: OCR all visible letters, numbers, and words
+    10. **RELATIONSHIP MAPPING**: What contains what, what's next to what
 
-    Be extremely precise about geometric elements and any text content within them. Use specific shape names and describe complex nested arrangements clearly. If you see numbers or letters inside shapes, list them specifically and distinguish between font color and background color. 
+    Enable questions like:
+    - "What color is the square in this quadrant?" 
+    - "What letter is inside the red shape?"
+    - "Name the color, not the word, in this image"
+    - "What number is on the yellow square?"
+    - "How many items are in this quadrant - two or three?"
+    - "What musical instrument has 6 letters and starts with this letter?"
+    - "True or false? There is an umbrella in this image"
+    - "What is the color and shape of this element?"
+    - "Which items are highlighted with yellow?"
+    - "What letters are in the yellow squares?"
 
-    IMPORTANT: Return ONLY the JSON object, no markdown formatting, no code blocks, no explanation text. Start your response with { and end with }.`;
+    IMPORTANT: Return ONLY the JSON object, no markdown formatting, no code blocks. Start with { and end with }.`;
 
       Logger.info("📤 Sending request to OpenAI Vision API...");
       

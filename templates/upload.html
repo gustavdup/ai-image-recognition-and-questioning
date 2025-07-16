@@ -10,10 +10,11 @@
         <h2>Upload Image</h2>
         <div class="nav-links">
             <a href="/gallery" class="nav-link">🖼️ View Gallery</a>
+            <a href="/detailed" class="nav-link">📊 Detailed View</a>
         </div>
         <form id="uploadForm" enctype="multipart/form-data">
-            <input type="file" name="file" id="fileInput" accept="image/*" required>
-            <button type="submit">Upload</button>
+            <input type="file" name="file" id="fileInput" accept="image/*" multiple required>
+            <button type="submit">Upload Images</button>
         </form>
         <div id="feedback"></div>
     </div>

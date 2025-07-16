@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detailed View - AI Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .controls {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            padding: 8px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            background: white;
+            font-size: 14px;
+            min-width: 120px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 80vh;
+            background: white;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            min-width: 2000px;
+        }
+
+        .data-table th {
+            background: #f8f9fa;
+            color: #495057;
+            font-weight: 600;
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 2px solid #dee2e6;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            white-space: nowrap;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table td {
+            padding: 8px;
+            border-bottom: 1px solid #dee2e6;
+            vertical-align: top;
+            max-width: 150px;
+            word-wrap: break-word;
+            font-size: 11px;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .image-thumb {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+
+        .tag-cell {
+            max-width: 120px;
+            line-height: 1.3;
+        }
+
+        .tag-item {
+            background: #e9ecef;
+            color: #495057;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            margin: 1px;
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        .tag-item.primary { background: #e3f2fd; color: #1976d2; }
+        .tag-item.category { background: #e8f5e8; color: #2e7d32; }
+        .tag-item.mood { background: #fce4ec; color: #c2185b; }
+        .tag-item.setting { background: #fff3e0; color: #f57c00; }
+        .tag-item.style { background: #f3e5f5; color: #7b1fa2; }
+
+        .cell-content {
+            max-height: 60px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .description-cell {
+            max-width: 200px;
+            font-size: 10px;
+            line-height: 1.3;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #f44336;
+        }
+
+        .metadata-text {
+            font-size: 10px;
+            color: #666;
+        }
+
+        .quality-badge {
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .quality-high { background: #4caf50; color: white; }
+        .quality-medium { background: #ff9800; color: white; }
+        .quality-low { background: #f44336; color: white; }
+        .quality-unknown { background: #9e9e9e; color: white; }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                margin: 5px;
+                border-radius: 8px;
+            }
+            
+            .header {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .controls {
+                padding: 10px 15px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-box {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Detailed Analysis View</h1>
+            <div class="nav-links">
+                <a href="/gallery" class="nav-link">🖼️ Gallery View</a>
+                <a href="/upload" class="nav-link">📤 Upload Image</a>
+            </div>
+        </div>
+
+        <div class="controls">
+            <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search across all data fields...">
+            <select class="filter-select" id="categoryFilter">
+                <option value="">All Categories</option>
+            </select>
+        </div>
+
+        <div id="loadingState" class="loading">
+            <div>🔄 Loading detailed analysis data...</div>
+        </div>
+        
+        <div id="errorState" class="error" style="display: none;">
+            <div>❌ Error loading data</div>
+        </div>
+
+        <div class="table-container" id="tableContainer" style="display: none;">
+            <table class="data-table" id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th>Background</th>
+                        <th>Shapes</th>
+                        <th>Shape Colors</th>
+                        <th>Text Content</th>
+                        <th>Text Color</th>
+                        <th>Color Mismatches</th>
+                        <th>Objects</th>
+                        <th>People</th>
+                        <th>Animals</th>
+                        <th>Nested Elements</th>
+                        <th>Highlighted Items</th>
+                        <th>Total Count</th>
+                        <th>Upload Date</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let allImages = [];
+        let filteredImages = [];
+
+        document.addEventListener('DOMContentLoaded', loadImages);
+        document.getElementById('searchBox').addEventListener('input', filterImages);
+        document.getElementById('categoryFilter').addEventListener('change', filterImages);
+
+        async function loadImages() {
+            try {
+                const response = await fetch('/api/images');
+                if (!response.ok) throw new Error('Failed to load images');
+                
+                const data = await response.json();
+                allImages = data.images || [];
+                
+                populateFilters();
+                filteredImages = [...allImages];
+                renderTable();
+                
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('tableContainer').style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error loading images:', error);
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('errorState').style.display = 'block';
+            }
+        }
+
+        function populateFilters() {
+            const categories = [...new Set(allImages.map(img => img.tags?.category).filter(Boolean))].sort();
+            
+            const categoryFilter = document.getElementById('categoryFilter');
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+                categoryFilter.appendChild(option);
+            });
+        }
+
+        function filterImages() {
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            const categoryFilter = document.getElementById('categoryFilter').value;
+
+            filteredImages = allImages.filter(image => {
+                const matchesSearch = !searchTerm || 
+                    JSON.stringify(image).toLowerCase().includes(searchTerm);
+                
+                const matchesCategory = !categoryFilter || image.tags?.category === categoryFilter;
+                
+                return matchesSearch && matchesCategory;
+            });
+
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            filteredImages.forEach(image => {
+                const row = createTableRow(image);
+                tbody.appendChild(row);
+            });
+        }
+
+        function createTableRow(image) {
+            const row = document.createElement('tr');
+            const tags = image.tags || {};
+            
+            const uploadDate = new Date(image.created_at).toLocaleDateString('en-US', {
+                year: '2-digit',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            row.innerHTML = `
+                <td><img src="${image.display_url || image.image_url}" alt="${image.image_name}" class="image-thumb" onerror="this.style.display='none'"></td>
+                <td class="metadata-text">${image.image_name || '-'}</td>
+                <td class="description-cell"><div class="cell-content">${image.description || '-'}</div></td>
+                <td><span class="tag-item category">${tags.educationalContext?.category || tags.category || '-'}</span></td>
+                <td><span class="tag-item setting">${tags.backgroundInfo?.backgroundColor || '-'}</span></td>
+                <td class="tag-cell"><div class="cell-content">${formatArray(tags.shapes?.geometricShapes || tags.shapes)}</div></td>
+                <td class="tag-cell"><div class="cell-content">${formatArray(tags.shapes?.shapeColors || tags.shapeColors, 'mood')}</div></td>
+                <td class="tag-cell"><div class="cell-content">${formatTextContent(tags.textContent)}</div></td>
+                <td><span class="tag-item primary">${tags.textContent?.textColor || '-'}</span></td>
+                <td class="tag-cell"><div class="cell-content">${tags.textContent?.textVsSemanticMismatch || tags.colorAnalysis?.colorWordMismatches ? formatArray([tags.textContent?.textVsSemanticMismatch] || tags.colorAnalysis?.colorWordMismatches, 'style') : '-'}</div></td>
+                <td class="tag-cell"><div class="cell-content">${formatArray(tags.objects?.realWorldItems || tags.objects)}</div></td>
+                <td class="tag-cell"><div class="cell-content">${formatArray(tags.people)}</div></td>
+                <td class="tag-cell"><div class="cell-content">${formatArray(tags.animals)}</div></td>
+                <td class="tag-cell"><div class="cell-content">${formatArray(tags.shapes?.nestedElements || tags.nestedShapes || tags.spatialRelationships?.itemsInsideShapes, 'style')}</div></td>
+                <td class="tag-cell"><div class="cell-content">${formatArray(tags.colorAnalysis?.highlightedElements, 'primary')}</div></td>
+                <td><span class="tag-item">${tags.quantitativeData?.totalItems || tags.count || '-'}</span></td>
+                <td class="metadata-text">${uploadDate}</td>
+            `;
+            
+            return row;
+        }
+
+        function formatArray(arr, tagClass = '') {
+            if (!arr || !Array.isArray(arr) || arr.length === 0) return '-';
+            return arr.map(item => `<span class="tag-item ${tagClass}">${item}</span>`).join(' ');
+        }
+
+        function formatTextContent(textContent) {
+            if (!textContent || typeof textContent !== 'object') return '-';
+            const items = [];
+            if (textContent.letters && textContent.letters.length > 0) {
+                items.push(...textContent.letters.map(l => `<span class="tag-item primary">Letter: ${l}</span>`));
+            }
+            if (textContent.numbers && textContent.numbers.length > 0) {
+                items.push(...textContent.numbers.map(n => `<span class="tag-item primary">Number: ${n}</span>`));
+            }
+            if (textContent.words && textContent.words.length > 0) {
+                items.push(...textContent.words.map(w => `<span class="tag-item">Word: ${w}</span>`));
+            }
+            return items.length > 0 ? items.join(' ') : '-';
+        }
+    </script>
+</body>
+</html>
